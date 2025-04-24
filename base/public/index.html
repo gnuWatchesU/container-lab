@@ -12,13 +12,34 @@
   <body>
     <div id="terminal"></div>
     <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
     <script>
       const term = new Terminal();
+      const fitAddon = new FitAddon.FitAddon();
+      term.loadAddon(fitAddon);
       term.open(document.getElementById('terminal'));
+      fitAddon.fit();
+    
       const socket = new WebSocket('ws://' + window.location.host);
       
-      term.onData(data => socket.send(data));
-      socket.onmessage = e => term.write(e.data);
+      term.onData(data => socket.send(JSON.stringify({ type: 'input', data })));
+    
+      socket.onmessage = e => {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'output') {
+          term.write(msg.data);
+        }
+      };
+    
+      function resizeTerminal() {
+        fitAddon.fit();
+        const cols = term.cols;
+        const rows = term.rows;
+        socket.send(JSON.stringify({ type: 'resize', cols, rows }));
+      }
+    
+      window.addEventListener('resize', resizeTerminal);
+      socket.addEventListener('open', resizeTerminal);
     </script>
-  </body>
+      </body>
 </html>
