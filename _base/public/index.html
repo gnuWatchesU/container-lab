@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>xterm.js Terminal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+  <style>
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+      background: #1e1e1e;
+      color: #fff;
+    }
+
+    #header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      background: #2d2d2d;
+      padding: 12px;
+      border-bottom: 1px solid #444;
+    }
+
+    #header img {
+      height: 80px;
+      width: 80px;
+    }
+
+    #header h1 {
+      margin: 0;
+      font-size: 50px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    #terminal {
+      height: calc(100vh - 58px);
+      /* adjust for header height */
+      width: 100vw;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="header">
+    <img src="happy-turtle.png" alt="Turtle Logo" />
+    <h1>container lab</h1>
+    <img src="logo-lumin-rev.svg" alt="Lumin Logo" />
+  </div>
+
+  <div id="terminal"></div>
+  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
+  <script>
+    const term = new Terminal();
+    const fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(document.getElementById('terminal'));
+    fitAddon.fit();
+
+    const socket = new WebSocket('ws://' + window.location.host);
+
+    term.onData(data => socket.send(JSON.stringify({ type: 'input', data })));
+
+    socket.onmessage = e => {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'output') {
+        term.write(msg.data);
+      }
+    };
+
+    function resizeTerminal() {
+      fitAddon.fit();
+      const cols = term.cols;
+      const rows = term.rows;
+      socket.send(JSON.stringify({ type: 'resize', cols, rows }));
+    }
+
+    window.addEventListener('resize', resizeTerminal);
+    socket.addEventListener('open', resizeTerminal);
+  </script>
+</body>
+
+</html>
