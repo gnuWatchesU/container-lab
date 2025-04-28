@@ -3,5 +3,5 @@
 Install dependencies, and pack:
 `cd _base; npm ci; npm pack; cd ..`
 
-### Step 1: Atrocious Antelope
-`docker build -t mgm:0.0.1 -f atrocious/Dockerfile`
+Get node:
+`curl -O https://nodejs.org/dist/v22.15.0/node-v22.15.0-linux-$(uname -m).tar.xz`

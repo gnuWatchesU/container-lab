@@ -7,19 +7,18 @@ const path = require('path');
 const app = express();
 const server = createServer(app);
 const wss = new WebSocket.Server({ server });
+const shell = 'bash';
+const ptyProcess = pty.spawn(shell, [], {
+    name: 'xterm-color',
+    cols: 80,
+    rows: 24,
+    cwd: process.env.HOME,
+    env: process.env,
+});
 
 app.use(express.static(path.join(__dirname, 'public')));
 
 wss.on('connection', function connection(ws) {
-    const shell = 'bash';
-    const ptyProcess = pty.spawn(shell, [], {
-        name: 'xterm-color',
-        cols: 80,
-        rows: 24,
-        cwd: process.env.HOME,
-        env: process.env,
-    });
-
     ptyProcess.onData(data => {
         ws.send(JSON.stringify({ type: 'output', data }));
     });
@@ -45,3 +44,14 @@ wss.on('connection', function connection(ws) {
 server.listen(3000, () => {
     console.log('Server listening on http://localhost:3000');
 });
+
+function stop() {
+    ptyProcess.kill();
+    server.close(() => {
+        console.log('Server stopped');
+    });
+    process.exit(0);
+}
+
+process.on('SIGTERM', stop);
+process.on('SIGINT', stop);
