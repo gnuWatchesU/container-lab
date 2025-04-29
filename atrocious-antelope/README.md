@@ -7,7 +7,7 @@ docker run -it --rm --privileged --pid=host -p 3000:3000 --device=/dev/:/devbind
 ```
 
 Navigate to our really secure app:
-[[http://localhost:3000]]
+[http://localhost:3000](http://localhost:3000)
 
 You can now do naughty things.  You can check out the block devices with `lsblk` at this point.  Ruh roh!  You have a disk!
 
